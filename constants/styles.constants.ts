@@ -12,6 +12,9 @@ export const COLORS = {
   textSecondary: '#7f8c8d',
   border: '#e1e8ed',
   placeholder: '#999999',
+  tabBarBackground: '#FFFFFF',
+  tabBarInactive: '#94A3B8',
+  tabBarActive: '#2563EB',
 };
 
 export const SPACING = {
@@ -30,7 +33,8 @@ export const FONTS = {
 };
 
 export const RADIUS = {
-  sm: 8,
-  md: 12,
-  lg: 16,
+  sm: 4,
+  md: 8,
+  lg: 12,
+  xl: 16,
 };

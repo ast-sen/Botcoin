@@ -18,7 +18,7 @@ import { SignupProps, User } from '../types/auth.types';
 import { useSignupForm } from '../hooks/UseSignupForm';
 
 // Services
-import { AuthService } from '../services/auth.service';
+import { authService as AuthService } from '../services/auth.service';
 
 // Components
 import { Input } from '../components/ui/Input';
@@ -27,7 +27,6 @@ import { SocialButton } from '../components/ui/SocialButton';
 // Changed to default imports to match the component exports
 import Checkbox from '../components/ui/Checkbox';
 import { PasswordStrengthIndicator } from '../components/ui/PasswordStrengthIndicator';
-
 
 // Constants
 import { COLORS, SPACING, RADIUS } from '../constants/styles.constants';
@@ -54,10 +53,18 @@ export const SignupScreen: React.FC<SignupProps> = ({
 
     setIsLoading(true);
     try {
-      const user = await AuthService.signup(form);
-      Alert.alert('Success', 'Account created successfully!');
-      onSignupSuccess?.(user);
-      resetForm();
+      const authResponse = await AuthService.signUp(form);
+      
+      if (authResponse.error) {
+        Alert.alert('Error', authResponse.error);
+        return;
+      }
+
+      if (authResponse.user) {
+        Alert.alert('Success', 'Account created successfully!');
+        onSignupSuccess?.(authResponse.user);
+        resetForm();
+      }
     } catch (error) {
       Alert.alert(
         'Error',
@@ -70,7 +77,15 @@ export const SignupScreen: React.FC<SignupProps> = ({
 
   const handleSocialSignup = async (provider: string) => {
     try {
-      await AuthService.socialLogin(provider);
+      const response = await AuthService.socialSignUp(provider.toLowerCase() as 'google' | 'facebook' | 'apple');
+      
+      if (response.error) {
+        Alert.alert('Error', response.error);
+      } else {
+        // For React Native, OAuth usually opens a browser/webview
+        // The actual user authentication will be handled by the auth state change listener
+        Alert.alert('Info', `${provider} authentication initiated`);
+      }
     } catch (error) {
       Alert.alert('Info', `${provider} signup will be implemented`);
     }

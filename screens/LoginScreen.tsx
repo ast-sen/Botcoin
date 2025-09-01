@@ -19,13 +19,12 @@ import { LoginProps } from '../types/auth.types';
 import { useLoginForm } from '../hooks/UseLoginForm';
 
 // Services
-import { AuthService } from '../services/auth.service';
+import { authService as AuthService } from '../services/auth.service';
 
 // Components
 import { Input } from '../components/ui/Input';
 import { Button } from '../components/ui/Button';
 import { SocialButton } from '../components/ui/SocialButton';
-import { DemoCredentials } from '../components/auth/DemoCredentials';
 
 // Constants
 import { COLORS, SPACING, RADIUS } from '../constants/styles.constants';
@@ -47,30 +46,46 @@ export const LoginScreen: React.FC<LoginProps> = ({
 
   const [showPassword, setShowPassword] = useState(false);
 
-  const handleLogin = async () => {
-    if (!validateForm()) return;
+const handleLogin = async () => {
+  if (!validateForm()) return;
 
-    setIsLoading(true);
-    try {
-      const user = await AuthService.login(form);
-      Alert.alert('Success', 'Login successful!');
-      onLoginSuccess?.(user);
-      resetForm();
-    } catch (error) {
-      Alert.alert(
-        'Error',
-        error instanceof Error ? error.message : 'Login failed'
-      );
-    } finally {
-      setIsLoading(false);
+  setIsLoading(true);
+  try {
+    const authResponse = await AuthService.signIn(form);
+    
+    if (authResponse.error) {
+      Alert.alert('Error', authResponse.error);
+      return;
     }
-  };
+    
+    if (authResponse.user) {
+      // Just use the user object directly from AuthService - it's already perfect!
+      console.log('Login successful:', authResponse.user);
+      Alert.alert('Success', 'Login successful!');
+      onLoginSuccess?.(authResponse.user);
+    }
+    
+    resetForm();
+  } catch (error) {
+    Alert.alert(
+      'Error',
+      error instanceof Error ? error.message : 'Login failed'
+    );
+  } finally {
+    setIsLoading(false);
+  }
+};
 
   const handleSocialLogin = async (provider: string) => {
     try {
-      await AuthService.socialLogin(provider);
+      // For now, just show info about social login implementation
+      Alert.alert('Info', `${provider} login will be implemented soon`);
+      
+      // When you implement social login, you might do something like:
+      // const authResponse = await AuthService.signInWithProvider(provider.toLowerCase());
+      // Handle the response similar to handleLogin above
     } catch (error) {
-      Alert.alert('Info', `${provider} login will be implemented`);
+      Alert.alert('Error', `${provider} login failed`);
     }
   };
 
@@ -148,8 +163,6 @@ const handleRegister = () => {
               onPress={handleLogin}
               loading={isLoading}
             />
-
-            <DemoCredentials />
 
             {/* Divider */}
             <View style={styles.divider}>
