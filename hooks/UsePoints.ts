@@ -11,11 +11,15 @@ export const usePoints = (userId: string | null) => {
 
   // Transform database transaction to HomeScreen format
   const transformTransactionForHomeScreen = (dbTransaction: DBTransaction): ComponentTransaction => {
+    const isRedeemed = dbTransaction.type === 'redeemed';
+    
     return {
       id: dbTransaction.id,
-      type: dbTransaction.type === 'earned' ? 'accumulated' : 'redeemed',
-      amount: dbTransaction.amount,
+      type: isRedeemed ? 'redeemed' : 'accumulated',
+      amount: Math.abs(dbTransaction.amount), // Always positive for display
       date: dbTransaction.created_at,
+      status: dbTransaction.status || 'completed', // Include status
+      description: dbTransaction.description || '',
     };
   };
 

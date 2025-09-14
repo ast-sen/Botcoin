@@ -14,6 +14,7 @@ export interface Transaction {
   pointsRedeemed: number;
   type: 'earned' | 'redeemed';
   description: string;
+  status?: 'pending' | 'completed' | 'failed';
   referenceId?: string;
   createdAt: string;
 }
@@ -24,6 +25,8 @@ export interface ComponentTransaction {
   type: 'accumulated' | 'redeemed';
   amount: number;
   date: string;
+  status?: 'pending' | 'completed' | 'failed';
+  description?: string;
 }
 
 // HomeScreen component props

@@ -109,34 +109,76 @@ interface TransactionItemProps {
 
 const TransactionItem: React.FC<TransactionItemProps> = ({ transaction }) => {
   const isAccumulated = transaction.type === 'accumulated';
+  const isPending = transaction.status === 'pending';
+  const isFailed = transaction.status === 'failed';
+  
+  // Determine colors based on status
+  const getStatusColor = () => {
+    if (isFailed) return COLORS.danger;
+    if (isPending) return '#FFA500'; // Orange for pending
+    return isAccumulated ? COLORS.success : COLORS.danger;
+  };
+
+  const getStatusText = () => {
+    if (transaction.type === 'redeemed') {
+      if (isFailed) return 'Credits Redemption (Rejected)';
+      if (isPending) return 'Credits Redemption (Pending)';
+      return 'Credits Redeemed';
+    }
+    return 'Credits Accumulated';
+  };
+
+  const getIcon = () => {
+    if (transaction.type === 'accumulated') return '↑';
+    if (isFailed) return '✗';
+    if (isPending) return '⏳';
+    return '↓';
+  };
   
   return (
-    <View style={styles.transactionItem}>
+    <View style={[styles.transactionItem, isPending && styles.pendingTransaction]}>
       <View style={[styles.typeIndicator, { 
-        backgroundColor: isAccumulated ? COLORS.success : COLORS.danger 
+        backgroundColor: getStatusColor(),
+        opacity: isPending ? 0.7 : 1.0
       }]}>
         <Text style={styles.typeIcon}>
-          {isAccumulated ? '↑' : '↓'}
+          {getIcon()}
         </Text>
       </View>
       
       <View style={styles.transactionContent}>
-        <Text style={styles.transactionType}>
-          {isAccumulated ? 'Credits Accumulated' : 'Credits Redeemed'}
+        <Text style={[styles.transactionType, isPending && styles.pendingText]}>
+          {getStatusText()}
         </Text>
         <Text style={styles.transactionDate}>
           {formatDate(transaction.date)}
         </Text>
+        {isPending && (
+          <Text style={styles.statusLabel}>
+            Awaiting admin approval
+          </Text>
+        )}
+        {isFailed && (
+          <Text style={[styles.statusLabel, { color: COLORS.danger }]}>
+            Request was rejected
+          </Text>
+        )}
       </View>
       
       <View style={styles.transactionAmount}>
         <Text style={[
           styles.amountText, 
-          { color: isAccumulated ? COLORS.success : COLORS.danger }
+          { 
+            color: getStatusColor(),
+            opacity: isPending ? 0.7 : 1.0
+          }
         ]}>
           {isAccumulated ? '+' : '-'}{formatPoints(transaction.amount)}
         </Text>
         <Text style={styles.amountLabel}>pts</Text>
+        {isPending && (
+          <Text style={styles.pendingLabel}>PENDING</Text>
+        )}
       </View>
     </View>
   );
@@ -525,6 +567,25 @@ const styles = StyleSheet.create({
     color: COLORS.surface,
     fontSize: 16,
     fontWeight: 'bold',
+  },
+   pendingTransaction: {
+    borderLeftWidth: 3,
+    borderLeftColor: '#FFA500',
+  },
+  pendingText: {
+    fontStyle: 'italic',
+  },
+  statusLabel: {
+    fontSize: 11,
+    color: '#FFA500',
+    fontWeight: '500',
+    marginTop: 2,
+  },
+  pendingLabel: {
+    fontSize: 9,
+    color: '#FFA500',
+    fontWeight: 'bold',
+    marginTop: 2,
   },
 });
 

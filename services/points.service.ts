@@ -47,27 +47,27 @@ class PointsService {
   }
 
   // Get transaction history (filtered for earned and redeemed only)
-  async getTransactionHistory(userId: string, limit: number = 50): Promise<Transaction[]> {
-    try {
-      const { data, error } = await supabase
-        .from('transactions')
-        .select('*')
-        .eq('user_id', userId)
-        .in('type', ['earned', 'redeemed']) // Only get earned and redeemed transactions
-        .order('created_at', { ascending: false })
-        .limit(limit);
+ async getTransactionHistory(userId: string, limit: number = 50): Promise<Transaction[]> {
+  try {
+    const { data, error } = await supabase
+      .from('transactions')
+      .select('*') // This includes status field
+      .eq('user_id', userId)
+      .in('type', ['earned', 'redeemed']) // Only get earned and redeemed transactions
+      .order('created_at', { ascending: false })
+      .limit(limit);
 
-      if (error) {
-        console.error('Error fetching transactions:', error);
-        return [];
-      }
-
-      return data || [];
-    } catch (error) {
+    if (error) {
       console.error('Error fetching transactions:', error);
       return [];
     }
+
+    return data || [];
+  } catch (error) {
+    console.error('Error fetching transactions:', error);
+    return [];
   }
+}
 
   // Add points to user account
   async addPoints(userId: string, amount: number, description: string): Promise<boolean> {
@@ -126,76 +126,68 @@ class PointsService {
   }
 
   // Submit redemption request
-  async submitRedemption(
-    userId: string,
-    accountId: string,
-    fullName: string,
-    gcashNumber: string,
-    pointsToRedeem: number
-  ): Promise<{ success: boolean; error?: string; redemptionId?: string }> {
-    try {
-      // Check if user has enough points
-      const profile = await this.getUserPoints(userId);
-      if (!profile || profile.available_points < pointsToRedeem) {
-        return { success: false, error: 'Insufficient points' };
-      }
-
-      const cashAmount = pointsToRedeem / 100; // 100 points = 1 PHP
-
-      // Create redemption request
-      const { data: redemption, error: redemptionError } = await supabase
-        .from('redemption_requests')
-        .insert({
-          user_id: userId,
-          account_id: accountId,
-          full_name: fullName,
-          gcash_number: gcashNumber,
-          points_redeemed: pointsToRedeem,
-          cash_amount: cashAmount,
-          status: 'pending',
-        })
-        .select()
-        .single();
-
-      if (redemptionError) {
-        console.error('Error creating redemption request:', redemptionError);
-        return { success: false, error: redemptionError.message };
-      }
-
-      // Update available points (deduct redeemed points)
-      const { error: updateError } = await supabase
-        .from('user_profiles')
-        .update({
-          available_points: profile.available_points - pointsToRedeem,
-          redeemed_points: profile.redeemed_points + pointsToRedeem,
-          updated_at: new Date().toISOString(),
-        })
-        .eq('user_id', userId);
-
-      if (updateError) {
-        console.error('Error updating points:', updateError);
-        return { success: false, error: updateError.message };
-      }
-
-      // Record transaction
-      await supabase
-        .from('transactions')
-        .insert({
-          user_id: userId,
-          type: 'redeemed',
-          amount: pointsToRedeem,
-          description: `Redeemed ${pointsToRedeem} points to GCash (${gcashNumber})`,
-          status: 'completed',
-          reference_id: redemption.id,
-        });
-
-      return { success: true, redemptionId: redemption.id };
-    } catch (error: any) {
-      console.error('Error submitting redemption:', error);
-      return { success: false, error: error.message };
+ async submitRedemption(
+  userId: string,
+  accountId: string,
+  fullName: string,
+  gcashNumber: string,
+  pointsToRedeem: number
+): Promise<{ success: boolean; error?: string; redemptionId?: string }> {
+  try {
+    // Check if user has enough points
+    const profile = await this.getUserPoints(userId);
+    if (!profile || profile.available_points < pointsToRedeem) {
+      return { success: false, error: 'Insufficient points' };
     }
-  }
 
+    const cashAmount = pointsToRedeem / 100; // 100 points = 1 PHP
+
+    // Create redemption request with pending status
+    const { data: redemption, error: redemptionError } = await supabase
+      .from('redemption_requests')
+      .insert({
+        user_id: userId,
+        account_id: accountId,
+        full_name: fullName,
+        gcash_number: gcashNumber,
+        points_redeemed: pointsToRedeem,
+        cash_amount: cashAmount,
+        status: 'pending', // Keep as pending
+      })
+      .select()
+      .single();
+
+    if (redemptionError) {
+      console.error('Error creating redemption request:', redemptionError);
+      return { success: false, error: redemptionError.message };
+    }
+
+    // DO NOT UPDATE POINTS YET - only create pending transaction
+    // Points will be deducted when admin approves the request
+
+    // Create a PENDING transaction (not completed)
+    const { error: transactionError } = await supabase
+      .from('transactions')
+      .insert({
+        user_id: userId,
+        type: 'redeemed',
+        amount: -pointsToRedeem, // Negative amount for redemption
+        description: `Redemption request - ${pointsToRedeem} points to GCash (${gcashNumber})`,
+        status: 'pending', // Mark as pending, not completed
+        reference_id: redemption.id,
+      });
+
+    if (transactionError) {
+      console.error('Error creating pending transaction:', transactionError);
+      // Don't fail the entire operation for this
+    }
+
+    return { success: true, redemptionId: redemption.id };
+  } catch (error: any) {
+    console.error('Error submitting redemption:', error);
+    return { success: false, error: error.message };
+  }
+}
   // Get redemption history
   async getRedemptionHistory(userId: string): Promise<RedemptionRequest[]> {
     try {

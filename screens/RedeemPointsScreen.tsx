@@ -86,6 +86,11 @@ const RedeemPointsPage: React.FC = () => {
     }));
   };
 
+  const calculateCashAmount = (points: number): number => {
+    // Assuming 1000 points = 10 PHP (you can adjust this rate)
+    return (points / 1000) * 10;
+  };
+
   const handleSubmit = async () => {
     if (!currentUser) {
       Alert.alert('Authentication Required', 'Please log in to redeem points');
@@ -134,53 +139,67 @@ const RedeemPointsPage: React.FC = () => {
       return;
     }
 
-    setIsSubmitting(true);
+    const cashAmount = calculateCashAmount(pointsValue);
 
-    try {
-      const result = await pointsService.submitRedemption(
-        currentUser.id,
-        formData.accountId,
-        formData.name,
-        formData.gcashNumber,
-        pointsValue
-      );
+    // Confirmation alert
+    Alert.alert(
+      'Confirm Redemption',
+      `Redeem ${pointsValue.toLocaleString()} points for ₱${cashAmount.toFixed(2)}?`,
+      [
+        { text: 'Cancel', style: 'cancel' },
+        { 
+          text: 'Confirm', 
+          onPress: async () => {
+            setIsSubmitting(true);
 
-      if (result.success) {
-        // Update local available points immediately
-        setAvailablePoints(prev => prev - pointsValue);
-        
-        Alert.alert(
-          'Redemption Successful!',
-          `${pointsValue.toLocaleString()} points will be processed and sent to your GCash account within 1-3 business days.`,
-          [
-            {
-              text: 'OK',
-              onPress: () => {
-                // Clear form after successful submission
-                setFormData({
-                  accountId: '',
-                  name: '',
-                  gcashNumber: '',
-                  pointsToRedeem: '',
-                });
-                // Optionally reload points to ensure sync
-                loadUserPoints(currentUser.id);
+            try {
+              const result = await pointsService.submitRedemption(
+                currentUser.id,
+                formData.accountId,
+                formData.name,
+                formData.gcashNumber,
+                pointsValue
+              );
+
+              if (result.success) {
+                // Update local available points immediately
+                setAvailablePoints(prev => prev - pointsValue);
+                
+                Alert.alert(
+                  'Redemption Successful!',
+                  `${pointsValue.toLocaleString()} points (₱${cashAmount.toFixed(2)}) will be processed and sent to your GCash account within 1-3 business days.`,
+                  [
+                    {
+                      text: 'OK',
+                      onPress: () => {
+                        // Clear form after successful submission
+                        setFormData({
+                          accountId: '',
+                          name: '',
+                          gcashNumber: '',
+                          pointsToRedeem: '',
+                        });
+                        // Optionally reload points to ensure sync
+                        loadUserPoints(currentUser.id);
+                      }
+                    }
+                  ]
+                );
+              } else {
+                Alert.alert('Redemption Failed', result.error || 'An error occurred while processing your redemption');
               }
+            } catch (error) {
+              console.error('Error submitting redemption:', error);
+              Alert.alert('Error', 'Failed to process redemption. Please try again.');
+            } finally {
+              setIsSubmitting(false);
             }
-          ]
-        );
-      } else {
-        Alert.alert('Redemption Failed', result.error || 'An error occurred while processing your redemption');
-      }
-    } catch (error) {
-      console.error('Error submitting redemption:', error);
-      Alert.alert('Error', 'Failed to process redemption. Please try again.');
-    } finally {
-      setIsSubmitting(false);
-    }
+          }
+        }
+      ]
+    );
   };
 
-  // Show loading screen while fetching points
   if (isLoading) {
     return (
       <View style={[styles.container, styles.loadingContainer]}>

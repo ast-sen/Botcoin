@@ -3,8 +3,7 @@ import { View, StyleSheet } from 'react-native';
 import LoginScreen from './screens/LoginScreen';
 import SignupScreen from './screens/SignupScreen';
 
-// Import the bottom navigation components
-import HomeScreen from './screens/HomeScreen'; // Use your existing HomeScreen
+import HomeScreen from './screens/HomeScreen'; 
 import RedeemPointsScreen from './screens/RedeemPointsScreen'; 
 import ProfileScreen from './screens/ProfileScreen';
 import BottomTabBar from './components/navigation/BottomTabBar';
