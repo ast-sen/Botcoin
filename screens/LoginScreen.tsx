@@ -76,19 +76,6 @@ const handleLogin = async () => {
   }
 };
 
-  const handleSocialLogin = async (provider: string) => {
-    try {
-      // For now, just show info about social login implementation
-      Alert.alert('Info', `${provider} login will be implemented soon`);
-      
-      // When you implement social login, you might do something like:
-      // const authResponse = await AuthService.signInWithProvider(provider.toLowerCase());
-      // Handle the response similar to handleLogin above
-    } catch (error) {
-      Alert.alert('Error', `${provider} login failed`);
-    }
-  };
-
   const handleForgotPassword = () => {
     if (onForgotPassword) {
       onForgotPassword();
@@ -169,22 +156,6 @@ const handleRegister = () => {
               <View style={styles.dividerLine} />
               <Text style={styles.dividerText}>OR</Text>
               <View style={styles.dividerLine} />
-            </View>
-
-            {/* Social Buttons */}
-            <View style={styles.socialContainer}>
-              <SocialButton
-                provider="google"
-                onPress={() => handleSocialLogin('Google')}
-              />
-              <SocialButton
-                provider="facebook"
-                onPress={() => handleSocialLogin('Facebook')}
-              />
-              <SocialButton
-                provider="apple"
-                onPress={() => handleSocialLogin('Apple')}
-              />
             </View>
           </View>
 

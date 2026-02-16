@@ -362,61 +362,7 @@ const ProfileScreen: React.FC<ProfileScreenProps> = ({ onLogout }) => {
     }
   }, [appCredentials]);
 
-  const handleHelpAndSupport = useCallback(() => {
-    Alert.alert('Help & Support', 'Navigate to help and support screen');
-  }, []);
-
-  const handlePrivacyPolicy = useCallback(() => {
-    Alert.alert('Privacy Policy', 'Open privacy policy document');
-  }, []);
-
-  const handleTermsOfService = useCallback(() => {
-    Alert.alert('Terms of Service', 'Open terms of service document');
-  }, []);
-
   const menuItems: MenuItem[] = useMemo(() => [
-    {
-      id: '1',
-      title: 'Account Settings',
-      icon: '⚙️',
-      action: handleAccountSettings,
-      showChevron: true,
-    },
-    {
-      id: '2',
-      title: 'Transaction History',
-      icon: '📊',
-      action: handleTransactionHistory,
-      showChevron: true,
-    },
-    {
-      id: '3',
-      title: 'Rewards & Benefits',
-      icon: '🏆',
-      action: handleRewardsAndBenefits,
-      showChevron: true,
-    },
-    {
-      id: '4',
-      title: 'Help & Support',
-      icon: '❓',
-      action: handleHelpAndSupport,
-      showChevron: true,
-    },
-    {
-      id: '5',
-      title: 'Privacy Policy',
-      icon: '🔒',
-      action: handlePrivacyPolicy,
-      showChevron: true,
-    },
-    {
-      id: '6',
-      title: 'Terms of Service',
-      icon: '📋',
-      action: handleTermsOfService,
-      showChevron: true,
-    },
     {
       id: '7',
       title: 'Sign Out',
@@ -424,8 +370,7 @@ const ProfileScreen: React.FC<ProfileScreenProps> = ({ onLogout }) => {
       action: handleSignOut,
       showChevron: false,
     },
-  ], [handleAccountSettings, handleTransactionHistory, handleRewardsAndBenefits, 
-      handleHelpAndSupport, handlePrivacyPolicy, handleTermsOfService, handleSignOut]);
+  ], [handleTransactionHistory, handleSignOut]);
 
   const renderMenuItem = (item: MenuItem) => (
     <TouchableOpacity

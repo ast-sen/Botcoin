@@ -61,6 +61,7 @@ const BottomTabBar: React.FC<BottomTabBarProps> = ({ activeTab, onTabPress }) =>
 const styles = StyleSheet.create({
   safeArea: {
     backgroundColor: COLORS.tabBarBackground,
+    marginBottom: 8,
   },
   container: {
     flexDirection: 'row',
